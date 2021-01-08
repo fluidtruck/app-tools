@@ -41,6 +41,11 @@ parameters:
     description: >
       The environment variable name containing the project ID.
     type: env_var_name
+  use-gcr:
+    default: false
+    description: >
+      Set to false to install a standard chart.
+    type: boolean
   use-github:
     default: false
     description: >
@@ -63,42 +68,83 @@ steps:
 
   - install-helm-client
 
-  - run:
-      name: Install Helm Chart
-      command: |-
-        CHART="<< parameters.chart >>"
-        CHART_VERSION="<< parameters.chart_version >>"
-        CONTAINER_REGISTRY="<< parameters.google-container-registry >>"
-        CONTAINER_REGISTRY_PROJECT_ID=$<< parameters.google-container-registry-project-id >>
-        PROJECT_ID=$<< parameters.google-project-id >>
-        VALUES="<< parameters.values >>"
-        USE_GITHUB="<< parameters.use-github >>"
+  - when:
+      condition: << parameters.use-gcr >>
+      steps:
+        - run:
+            name: Install Helm Chart
+            command: |-
+              CHART="<< parameters.chart >>"
+              CHART_VERSION="<< parameters.chart_version >>"
+              CONTAINER_REGISTRY="<< parameters.google-container-registry >>"
+              CONTAINER_REGISTRY_PROJECT_ID=$<< parameters.google-container-registry-project-id >>
+              PROJECT_ID=$<< parameters.google-project-id >>
+              VALUES="<< parameters.values >>"
+              USE_GITHUB="<< parameters.use-github >>"
 
-        IMAGE="${CONTAINER_REGISTRY}/${CONTAINER_REGISTRY_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}"
-        IMAGE_TAG="${CIRCLE_SHA1:0:7}"
+              IMAGE="${CONTAINER_REGISTRY}/${CONTAINER_REGISTRY_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}"
+              IMAGE_TAG="${CIRCLE_SHA1:0:7}"
 
-        NAMESPACE=${CIRCLE_PROJECT_REPONAME}
-        if [ "${USE_GITHUB}" == "true" ]; then
-          NAMESPACE="${CIRCLE_USERNAME}-${NAMESPACE}"
-        fi
+              NAMESPACE=${CIRCLE_PROJECT_REPONAME}
+              if [ "${USE_GITHUB}" == "true" ]; then
+                NAMESPACE="${CIRCLE_USERNAME}-${NAMESPACE}"
+              fi
 
-        if [ -n "${VALUES}" ]; then
-          SPLIT_VALUES=($(echo ${VALUES} | tr "," "\n"))
-          for i in "${SPLIT_VALUES[@]}"; do
-            set -- "$@" -f "${i}"
-          done
-        fi
+              if [ -n "${VALUES}" ]; then
+                SPLIT_VALUES=($(echo ${VALUES} | tr "," "\n"))
+                for i in "${SPLIT_VALUES[@]}"; do
+                  set -- "$@" -f "${i}"
+                done
+              fi
 
-        if [ -n "${CHART_VERSION}" ]; then
-          set -- "$@" --version "${CHART_VERSION}"
-        fi
+              if [ -n "${CHART_VERSION}" ]; then
+                set -- "$@" --version "${CHART_VERSION}"
+              fi
 
-        helm upgrade ${NAMESPACE} fluidshare/$CHART \
-          --install \
-          --namespace ${NAMESPACE} \
-          --create-namespace \
-          --atomic \
-          --wait \
-          --set image.repository="${IMAGE}" \
-          --set image.tag="${IMAGE_TAG}" \
-          "$@"
+              helm upgrade ${NAMESPACE} $CHART \
+                --install \
+                --namespace ${NAMESPACE} \
+                --create-namespace \
+                --atomic \
+                --wait \
+                --set image.repository="${IMAGE}" \
+                --set image.tag="${IMAGE_TAG}" \
+                "$@"
+
+  - unless:
+      condition: << parameters.use-gcr >>
+      steps:
+        - run:
+            name: Install Helm Chart
+            command: |-
+              CHART="<< parameters.chart >>"
+              CHART_VERSION="<< parameters.chart_version >>"
+              PROJECT_ID=$<< parameters.google-project-id >>
+              VALUES="<< parameters.values >>"
+              USE_GITHUB="<< parameters.use-github >>"
+
+              NAMESPACE=${CIRCLE_PROJECT_REPONAME}
+              if [ "${USE_GITHUB}" == "true" ]; then
+                NAMESPACE="${CIRCLE_USERNAME}-${NAMESPACE}"
+              fi
+
+              if [ -n "${VALUES}" ]; then
+                SPLIT_VALUES=($(echo ${VALUES} | tr "," "\n"))
+                for i in "${SPLIT_VALUES[@]}"; do
+                  set -- "$@" -f "${i}"
+                done
+              fi
+
+              if [ -n "${CHART_VERSION}" ]; then
+                set -- "$@" --version "${CHART_VERSION}"
+              fi
+
+              helm upgrade ${NAMESPACE} $CHART \
+                --install \
+                --namespace ${NAMESPACE} \
+                --create-namespace \
+                --atomic \
+                --wait \
+                --set image.repository="${IMAGE}" \
+                --set image.tag="${IMAGE_TAG}" \
+                "$@"
