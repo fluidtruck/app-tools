@@ -54,8 +54,7 @@ workflows:
           context: orb-publishing
           add-pr-comment: false
           fail-if-semver-not-indicated: true
-          publish-version-tag: true
-          ssh-fingerprints: "46:f1:26:3b:1d:18:39:01:f2:ab:d5:d9:05:7a:65:bb"
+          publish-version-tag: false
           requires:
             - integration-test-1
           filters:
