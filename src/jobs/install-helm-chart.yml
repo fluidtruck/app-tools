@@ -25,6 +25,11 @@ parameters:
     description: >
       The environment variable name containing the project ID.
     type: env_var_name
+  use-gcr:
+    default: false
+    description: >
+      Set to false to install a standard chart.
+    type: boolean
   use-github:
     default: false
     description: >
@@ -47,5 +52,6 @@ steps:
       gcloud-service-key: << parameters.gcloud-service-key >>
       google-container-registry-project-id: << parameters.google-container-registry-project-id >>
       google-project-id: << parameters.google-project-id >>
+      use-gcr: << parameters.use-gcr >>
       use-github: << parameters.use-github >>
       values: << parameters.values >>
