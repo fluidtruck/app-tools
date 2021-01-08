@@ -1,0 +1,32 @@
+description: >
+  Installs the Helm CLI client.
+
+parameters:
+  version:
+    default: v3.4.2
+    description: >
+      The Helm version to install.
+    type: string
+
+steps:
+  - run:
+      name: Install Helm Client
+      command: |-
+        HELM_VERSION="<< parameters.version >>"
+
+        if which helm > /dev/null; then
+          echo "helm is already installed"
+          exit 0
+        fi
+
+        if [ -n "${HELM_VERSION}" ]; then
+          set -- "$@" --version "${HELM_VERSION}"
+        fi
+
+        curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 > get_helm.sh
+        chmod 700 get_helm.sh
+        ./get_helm.sh "$@"
+
+  - add-helm-repo:
+      repo: fluidshare
+      url: https://fluidshare.github.io/helm-charts

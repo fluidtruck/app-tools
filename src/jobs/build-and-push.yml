@@ -1,0 +1,22 @@
+description: >
+  Handles the build and push of the docker image.
+
+executor: machine
+
+parameters:
+  gcloud-service-key:
+    default: GCLOUD_SERVICE_KEY
+    description: >
+      The environment variable name containing the service account JSON key.
+    type: env_var_name
+  google-project-id:
+    default: GOOGLE_PROJECT_ID
+    description: >
+      The environment variable name containing the project ID.
+    type: env_var_name
+
+steps:
+  - checkout
+  - build-and-push:
+      gcloud-service-key: << parameters.gcloud-service-key >>
+      google-project-id: << parameters.google-project-id >>

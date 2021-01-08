@@ -1,0 +1,11 @@
+version: 2.1
+
+description: >
+  An orb to assist in deploying Fluid Truck applications.
+
+display:
+  home_url: "https://github.com/fluidshare/app-tools"
+  source_url: "https://github.com/fluidshare/app-tools"
+
+orbs:
+ gcp-cli: circleci/gcp-cli@2.1.0

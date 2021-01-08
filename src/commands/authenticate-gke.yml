@@ -1,0 +1,71 @@
+description: >
+  Authenticate to Google Cloud Platform Kubernetes Engine.
+
+parameters:
+  gcloud-service-key:
+    default: GOOGLE_SERVICE_KEY
+    description: >
+      The environment variable name containing the service account JSON key.
+    type: env_var_name
+  google-container-cluster:
+    default: GOOGLE_CONTAINER_CLUSTER
+    description: >
+      The environment variable name containing the cluster name.
+    type: env_var_name
+  google-container-region:
+    default: GOOGLE_CONTAINER_REGION
+    description: >
+      The environment variable name containing the container region.
+    type: env_var_name
+  google-project-id:
+    default: GOOGLE_PROJECT_ID
+    description: >
+      The environment variable name containing the project ID.
+    type: env_var_name
+
+steps:
+  - run:
+      name: Activate GCP Service Account
+      command: |-
+        if ! which gcloud > /dev/null; then
+          echo "gcloud is not installed. Please run this command with a executor that supports gcloud."
+          exit 1
+        fi
+
+        if [[ -n $(gcloud auth list --format="value(account)") ]]; then
+            echo "Client is already authenticated to Google Cloud Platform. Skipping authentication."
+            exit 0
+        fi
+
+        CREDENTIALS=$<< parameters.gcloud-service-key >>
+        if [[ -z "${CREDENTIALS}" ]]; then
+          echo "No credentials were found."
+          exit 1
+        fi
+
+        echo "${CREDENTIALS}" > "${HOME}/service-account.json"
+        gcloud auth activate-service-account --key-file "${HOME}/service-account.json"
+
+  - run:
+      name: Authenticate With Cluster
+      command: |-
+        CONTAINER_CLUSTER=$<< parameters.google-container-cluster >>
+        if [[ -z "${CONTAINER_CLUSTER}" ]]; then
+          echo "No container cluster was found."
+          exit 1
+        fi
+
+        CONTAINER_REGION=$<< parameters.google-container-region >>
+        if [[ -z "${CONTAINER_REGION}" ]]; then
+          echo "No container region was found."
+          exit 1
+        fi
+
+        PROJECT_ID=$<< parameters.google-project-id >>
+        if [[ -z "${PROJECT_ID}" ]]; then
+          echo "No project ID was found."
+          exit 1
+        fi
+
+        gcloud --quiet config set project "${PROJECT_ID}"
+        gcloud --quiet container clusters get-credentials ${CONTAINER_CLUSTER} --region="${CONTAINER_REGION}"

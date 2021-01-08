@@ -1,0 +1,104 @@
+descrition: >
+  Install a Helm chart to the configured cluster.
+
+parameters:
+  chart:
+    description: >
+      The name of the chart being installed.
+    type: string
+  chart_version:
+    default: ""
+    description: >
+      The version of the chart being installed.
+    type: string
+  gcloud-service-key:
+    default: GCLOUD_SERVICE_KEY
+    description: >
+      The environment variable name containing the service account JSON key.
+    type: env_var_name
+  google-container-cluster:
+    default: GOOGLE_CONTAINER_CLUSTER
+    description: >
+      The environment varibale name containing the cluster name.
+    type: env_var_name
+  google-container-region:
+    default: GOOGLE_CONTAINER_REGION
+    description: >
+      The environment variable name containing the container region.
+    type: env_var_name
+  google-container-registry:
+    default: gcr.io
+    description: >
+      The container registry to use.
+    type: string
+  google-container-registry-project-id:
+    default: GOOGLE_PROJECT_ID
+    description: >
+      The environment variable name containing the container registry project ID.
+    type: env_var_name
+  google-project-id:
+    default: GOOGLE_PROJECT_ID
+    description: >
+      The environment variable name containing the project ID.
+    type: env_var_name
+  use-github:
+    default: false
+    description: >
+      If this is set to true, the command will use CIRCLE_USERNAME as a prefix for the namespace.
+    type: boolean
+  values:
+    default: ""
+    description: >
+      A comma delimited list of values files to use. For example:
+
+      ./chart/staging-values.yml,./charts/values.yml
+    type: string
+
+steps:
+  - authenticate-gke:
+      google-container-cluster: << parameters.google-container-cluster >>
+      google-container-region: << parameters.google-container-region >>
+      google-project-id: << parameters.google-project-id >>
+      gcloud-service-key: << parameters.gcloud-service-key >>
+
+  - install-helm-client
+
+  - run:
+      name: Install Helm Chart
+      command: |-
+        CHART="<< parameters.chart >>"
+        CHART_VERSION="<< parameters.chart_version >>"
+        CONTAINER_REGISTRY="<< parameters.google-container-registry >>"
+        CONTAINER_REGISTRY_PROJECT_ID=$<< parameters.google-container-registry-project-id >>
+        PROJECT_ID=$<< parameters.google-project-id >>
+        VALUES="<< parameters.values >>"
+        USE_GITHUB="<< parameters.use-github >>"
+
+        IMAGE="${CONTAINER_REGISTRY}/${CONTAINER_REGISTRY_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}"
+        IMAGE_TAG="${CIRCLE_SHA1:0:7}"
+
+        NAMESPACE=${CIRCLE_PROJECT_REPONAME}
+        if [ "${USE_GITHUB}" == "true" ]; then
+          NAMESPACE="${CIRCLE_USERNAME}-${NAMESPACE}"
+        fi
+
+        if [ -n "${VALUES}" ]; then
+          SPLIT_VALUES=($(echo ${VALUES} | tr "," "\n"))
+          for i in "${SPLIT_VALUES[@]}"; do
+            set -- "$@" -f "${i}"
+          done
+        fi
+
+        if [ -n "${CHART_VERSION}" ]; then
+          set -- "$@" --version "${CHART_VERSION}"
+        fi
+
+        helm upgrade ${NAMESPACE} fluidshare/$CHART \
+          --install \
+          --namespace ${NAMESPACE} \
+          --create-namespace \
+          --atomic \
+          --wait \
+          --set image.repository="${IMAGE}" \
+          --set image.tag="${IMAGE_TAG}" \
+          "$@"

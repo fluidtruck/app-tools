@@ -1,0 +1,18 @@
+description: >
+  Adds a Helm Chart repository so it can be used with other commands.
+
+parameters:
+  repo:
+    description: >
+      The repository name.
+    type: string
+  url:
+    description: >
+      The repository URL.
+    type: string
+
+steps:
+  - run:
+      name: "Add Helm Repository: << parameters.repo >>"
+      command: >
+        helm repo add "<< parameters.repo >>" "<< parameters.url >>"

@@ -1,0 +1,67 @@
+description: >
+  Builds, and pushes, a docker image to the configured container registry.
+
+parameters:
+  gcloud-service-key:
+    default: GCLOUD_SERVICE_KEY
+    description: >
+      The environment variable name containing the service account JSON key.
+    type: env_var_name
+  google-container-region:
+    default: GOOGLE_CONTAINER_REGION
+    description:
+      The environment variable name containing the container region.
+    type: env_var_name
+  google-container-registry:
+    default: gcr.io
+    description: >
+      The container registry to use.
+    type: string
+  google-project-id:
+    default: GOOGLE_PROJECT_ID
+    description: >
+      The environment variable name containing the project ID.
+    type: env_var_name
+
+steps:
+  - gcp-cli/install
+
+  - gcp-cli/initialize:
+      google-compute-region: << parameters.google-container-region >>
+      google-project-id: << parameters.google-project-id >>
+      gcloud-service-key: << parameters.gcloud-service-key >>
+
+  - run:
+      name: Configure Docker with gcloud
+      command: |-
+        if [[ $EUID == 0 ]]; then
+          export SUDO="";
+        else
+          export SUDO="sudo";
+        fi
+
+        mkdir -p "${HOME}/.docker"
+        gcloud auth configure-docker --quiet --project $<< parameters.google-project-id >>
+
+        $SUDO chown "${USER}:${USER}" "${HOME}/.docker" -R
+        if [[ -d "${HOME}/.config" ]]; then
+          $SUDO chown "${USER}:${USER}" "${HOME}/.config" -R
+        fi
+
+  - run:
+      name: Build and Push Docker Image
+      command: |-
+        CONTAINER_REGISTRY="<< parameters.google-container-registry >>"
+        PROJECT_ID=$<< parameters.google-project-id >>
+
+        IMAGE="${CONTAINER_REGISTRY}/${PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}"
+        IMAGE_TAG="${CIRCLE_SHA1:0:7}"
+
+        docker build \
+          --build-arg X_TAG="${IMAGE_TAG}" \
+          -t "${IMAGE}:latest" \
+          -t "${IMAGE}:${IMAGE_TAG}" \
+          .
+
+        docker push "${IMAGE}:latest"
+        docker push "${IMAGE}:${IMAGE_TAG}"

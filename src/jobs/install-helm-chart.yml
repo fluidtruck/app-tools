@@ -1,0 +1,51 @@
+executor: default
+
+parameters:
+  chart:
+    description: >
+      The name of the chart being installed.
+    type: string
+  chart_version:
+    default: ""
+    description: >
+      The version of the chart being installed.
+    type: string
+  gcloud-service-key:
+    default: GCLOUD_SERVICE_KEY
+    description: >
+      The environment variable name containing the service account JSON key.
+    type: env_var_name
+  google-container-registry-project-id:
+    default: GOOGLE_PROJECT_ID
+    description: >
+      The environment variable name containing the container registry project ID.
+    type: env_var_name
+  google-project-id:
+    default: GOOGLE_PROJECT_ID
+    description: >
+      The environment variable name containing the project ID.
+    type: env_var_name
+  use-github:
+    default: false
+    description: >
+      If this is set to true, the command will use CIRCLE_USERNAME as a prefix for the namespace.
+    type: boolean
+  values:
+    default: ""
+    description: >
+      A comma delimited list of values files to use. For example:
+
+      ./chart/staging-values.yml,./charts/values.yml
+    type: string
+
+steps:
+  - checkout
+
+  - install-helm-chart:
+      chart: << parameters.chart >>
+      chart_version: << parameters.chart_version >>
+      gcloud-service-key: << parameters.gcloud-service-key >>
+      google-container-registry-project-id: << parameters.google-container-registry-project-id >>
+      google-project-id: << parameters.google-project-id >>
+      use-github: << parameters.use-github >>
+      values: << parameters.values >>
