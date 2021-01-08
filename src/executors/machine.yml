@@ -1,0 +1,12 @@
+description: >
+  An executor running docker commands on a machine.
+machine:
+  image: << parameters.image >>
+  docker_layer_caching: true
+parameters:
+  image:
+    default: ubuntu-2004:202010-01
+    description: >
+      Pick a specific image:
+      https://circleci.com/docs/2.0/configuration-reference/#available-machine-images
+    type: string
