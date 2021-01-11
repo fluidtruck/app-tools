@@ -41,6 +41,11 @@ parameters:
     description: >
       The environment variable name containing the project ID.
     type: env_var_name
+  repo-url:
+    default: ""
+    description: >
+      The repository URL this chart is located at.
+    type: string
   use-gcr:
     default: false
     description: >
@@ -67,6 +72,15 @@ steps:
       gcloud-service-key: << parameters.gcloud-service-key >>
 
   - install-helm-client
+
+  - when:
+      condition: << parameters.repo-url >>
+      steps:
+        - run:
+            name: Add custom helm repo.
+            command: |-
+              IFS="/" read -ra REPO \<<< "<< parameters.chart >>"
+              helm repo add "${REPO[0]}" "<< parameters.repo-url >>"
 
   - when:
       condition: << parameters.use-gcr >>

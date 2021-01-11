@@ -25,6 +25,11 @@ parameters:
     description: >
       The environment variable name containing the project ID.
     type: env_var_name
+  repo-url:
+    default: ""
+    description: >
+      The repository URL this chart is located at.
+    type: string
   use-gcr:
     default: false
     description: >
@@ -52,6 +57,7 @@ steps:
       gcloud-service-key: << parameters.gcloud-service-key >>
       google-container-registry-project-id: << parameters.google-container-registry-project-id >>
       google-project-id: << parameters.google-project-id >>
+      repo-url: << parameters.repo-url >>
       use-gcr: << parameters.use-gcr >>
       use-github: << parameters.use-github >>
       values: << parameters.values >>
