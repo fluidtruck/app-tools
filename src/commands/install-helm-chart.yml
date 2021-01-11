@@ -159,6 +159,4 @@ steps:
                 --create-namespace \
                 --atomic \
                 --wait \
-                --set image.repository="${IMAGE}" \
-                --set image.tag="${IMAGE_TAG}" \
                 "$@"
