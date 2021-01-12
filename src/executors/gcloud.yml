@@ -4,7 +4,7 @@ docker:
   - image: 'google/cloud-sdk:<<parameters.tag>>'
 parameters:
   tag:
-    default: slim
+    default: latest
     description: >
       Pick a specific google/cloud-sdk image variant:
       https://hub.docker.com/r/google/cloud-sdk/tags
