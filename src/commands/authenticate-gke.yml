@@ -3,7 +3,7 @@ description: >
 
 parameters:
   gcloud-service-key:
-    default: GOOGLE_SERVICE_KEY
+    default: GCLOUD_SERVICE_KEY
     description: >
       The environment variable name containing the service account JSON key.
     type: env_var_name
