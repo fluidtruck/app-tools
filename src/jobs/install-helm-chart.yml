@@ -5,7 +5,7 @@ parameters:
     description: >
       The name of the chart being installed.
     type: string
-  chart_version:
+  chart-version:
     default: ""
     description: >
       The version of the chart being installed.
@@ -25,6 +25,11 @@ parameters:
     description: >
       The environment variable name containing the project ID.
     type: env_var_name
+  namespace:
+    default: ""
+    description: >
+      The namespace to use. Defaults to the value of CIRCLE_PROJECT_REPONAME.
+    type: string
   repo-url:
     default: ""
     description: >
@@ -53,10 +58,11 @@ steps:
 
   - install-helm-chart:
       chart: << parameters.chart >>
-      chart_version: << parameters.chart_version >>
+      chart-version: << parameters.chart-version >>
       gcloud-service-key: << parameters.gcloud-service-key >>
       google-container-registry-project-id: << parameters.google-container-registry-project-id >>
       google-project-id: << parameters.google-project-id >>
+      namespace: << parameters.namespace >>
       repo-url: << parameters.repo-url >>
       use-gcr: << parameters.use-gcr >>
       use-github: << parameters.use-github >>

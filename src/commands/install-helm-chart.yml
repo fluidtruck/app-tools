@@ -6,7 +6,7 @@ parameters:
     description: >
       The name of the chart being installed.
     type: string
-  chart_version:
+  chart-version:
     default: ""
     description: >
       The version of the chart being installed.
@@ -41,6 +41,11 @@ parameters:
     description: >
       The environment variable name containing the project ID.
     type: env_var_name
+  namespace:
+    default: ""
+    description: >
+      The namespace to use. Defaults to the value of CIRCLE_PROJECT_REPONAME.
+    type: string
   repo-url:
     default: ""
     description: >
@@ -89,9 +94,10 @@ steps:
             name: Install Helm Chart
             command: |-
               CHART="<< parameters.chart >>"
-              CHART_VERSION="<< parameters.chart_version >>"
+              CHART_VERSION="<< parameters.chart-version >>"
               CONTAINER_REGISTRY="<< parameters.google-container-registry >>"
               CONTAINER_REGISTRY_PROJECT_ID=$<< parameters.google-container-registry-project-id >>
+              NAMESPACE="<< parameters.namespace >>"
               PROJECT_ID=$<< parameters.google-project-id >>
               VALUES="<< parameters.values >>"
               USE_GITHUB="<< parameters.use-github >>"
@@ -99,7 +105,10 @@ steps:
               IMAGE="${CONTAINER_REGISTRY}/${CONTAINER_REGISTRY_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}"
               IMAGE_TAG="${CIRCLE_SHA1:0:7}"
 
-              NAMESPACE=${CIRCLE_PROJECT_REPONAME}
+              if [ -z "${NAMESPACE}" ]; then
+                NAMESPACE=${CIRCLE_PROJECT_REPONAME}
+              fi
+
               if [ "${USE_GITHUB}" == "true" ]; then
                 NAMESPACE="${CIRCLE_USERNAME}-${NAMESPACE}"
               fi
@@ -132,12 +141,16 @@ steps:
             name: Install Helm Chart
             command: |-
               CHART="<< parameters.chart >>"
-              CHART_VERSION="<< parameters.chart_version >>"
+              CHART_VERSION="<< parameters.chart-version >>"
+              NAMESPACE="<< parameters.namespace >>"
               PROJECT_ID=$<< parameters.google-project-id >>
               VALUES="<< parameters.values >>"
               USE_GITHUB="<< parameters.use-github >>"
 
-              NAMESPACE=${CIRCLE_PROJECT_REPONAME}
+              if [ -z "${NAMESPACE}" ]; then
+                NAMESPACE=${CIRCLE_PROJECT_REPONAME}
+              fi
+
               if [ "${USE_GITHUB}" == "true" ]; then
                 NAMESPACE="${CIRCLE_USERNAME}-${NAMESPACE}"
               fi
