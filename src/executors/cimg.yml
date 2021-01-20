@@ -1,0 +1,11 @@
+description: >
+  A basic executor using cimg.
+docker:
+  - image: 'cimg/<<parameters.image>>:<<parameters.tag>>'
+parameters:
+  image:
+    default: base
+    type: string
+  tag:
+    default: edge
+    type: string

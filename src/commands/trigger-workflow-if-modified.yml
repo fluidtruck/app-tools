@@ -1,0 +1,63 @@
+description: >
+  Triggers a workflow if a directory, or file, is modified. Continues if not.
+
+parameters:
+  base-branch:
+    default: ''
+    description: >
+      The branch to check against. This can also be a commit SHA.
+    type: string
+  custom-parameters:
+    default: '{}'
+    description: >
+      Custom parameters to pass to the pipeline.
+    type: string
+  pattern:
+    default: .*
+    description: >
+      The regex to match files against. The command uses grep to search file names. If you want to
+      enforce "starting with" use `^.`. For checking if files in `src/` or `lib/` were modified, the
+      pattern to use would be `^src.*|^lib.*`.
+    type: string
+  workflow:
+    default: ''
+    description: >
+      The workflow name to trigger. Will be passed as the `workflow` parameter.
+    type: string
+
+steps:
+  - jq/install
+  - run:
+      name: Trigger workflow if modified
+      command: |-
+        BASE_BRANCH="<< parameters.base-branch >>"
+
+        git status >/dev/null 2>&1 || { echo >&2 "Not in a git directory, or no git."; exit 1; }
+        circleci-agent >/dev/null 2>&1 || { echo >&2 "No CircleCI agent. These are in all CircleCI containers."; exit 1; }
+
+        if [ -z "${CIRCLE_TOKEN}" ]; then
+          echo "CIRCLE_TOKEN not set."
+          exit 1
+        fi
+
+        if [ -n "${CIRCLE_PR_NUMBER}" ]; then
+          CIRCLE_BRANCH="pull/${CIRCLE_PR_NUMBER}/head"
+        fi
+
+        PIPELINE_PARAMETERS=$(echo '<< parameters.custom-parameters >>' | jq -c --arg workflow '<< parameters.workflow >>' '. + {workflow: $workflow}')
+
+        if [ -z "${BASE_BRANCH}" ]; then
+          FILES_MODIFIED=$(git diff --name-only HEAD~1 | grep -i -E '<< parameters.pattern >>' || true)
+        else
+          FILES_MODIFIED=$(git diff --name-only origin/${BASE_BRANCH}..HEAD | grep -i -E '<< parameters.pattern >>' || true)
+        fi
+
+        if [ -z "${FILES_MODIFIED}" ]; then
+          echo "No files matching the pattern have been modified. Skipping."
+        else
+          curl --silent -X POST \
+            "https://circleci.com/api/v2/project/github/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pipeline?circle-token=${CIRCLE_TOKEN}" \
+            -H 'Accept: */*' \
+            -H 'Content-Type: application/json' \
+            -d '{"branch":"'${CIRCLE_BRANCH}'","parameters":'${PIPELINE_PARAMETERS}'}'
+        fi
