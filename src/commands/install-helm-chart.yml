@@ -102,9 +102,6 @@ steps:
               VALUES="<< parameters.values >>"
               USE_GITHUB="<< parameters.use-github >>"
 
-              IMAGE="${CONTAINER_REGISTRY}/${CONTAINER_REGISTRY_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}"
-              IMAGE_TAG="${CIRCLE_SHA1:0:7}"
-
               if [ -z "${NAMESPACE}" ]; then
                 NAMESPACE=${CIRCLE_PROJECT_REPONAME}
               fi
@@ -130,8 +127,9 @@ steps:
                 --create-namespace \
                 --atomic \
                 --wait \
-                --set image.repository="${IMAGE}" \
-                --set image.tag="${IMAGE_TAG}" \
+                --set image.registry="${CONTAINER_REGISTRY}" \
+                --set image.repository="${CONTAINER_REGISTRY_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}" \
+                --set image.tag="${CIRCLE_SHA1:0:7}" \
                 "$@"
 
   - unless:
