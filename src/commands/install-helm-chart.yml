@@ -107,7 +107,7 @@ steps:
               fi
 
               if [ "${USE_GITHUB}" == "true" ]; then
-                NAMESPACE="${CIRCLE_USERNAME}-${NAMESPACE}"
+                NAMESPACE="${CIRCLE_USERNAME}.${NAMESPACE}"
               fi
 
               if [ -n "${VALUES}" ]; then
