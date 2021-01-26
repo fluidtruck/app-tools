@@ -106,6 +106,7 @@ steps:
                 NAMESPACE=${CIRCLE_PROJECT_REPONAME}
               fi
 
+              CHART_NAME="${NAMESPACE}"
               if [ "${USE_GITHUB}" == "true" ]; then
                 NAMESPACE="${CIRCLE_USERNAME}"
               fi
@@ -121,7 +122,7 @@ steps:
                 set -- "$@" --version "${CHART_VERSION}"
               fi
 
-              helm upgrade ${NAMESPACE} $CHART \
+              helm upgrade ${CHART_NAME} $CHART \
                 --install \
                 --namespace ${NAMESPACE} \
                 --create-namespace \
