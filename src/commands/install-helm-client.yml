@@ -3,7 +3,7 @@ description: >
 
 parameters:
   version:
-    default: v3.4.2
+    default: v3.5.1
     description: >
       The Helm version to install.
     type: string
