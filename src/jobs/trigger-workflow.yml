@@ -1,0 +1,47 @@
+description: >
+  Handles the build and push of the docker image.
+
+executor: cimg
+
+parameters:
+  base-branch:
+    default: ''
+    description: >
+      When `dir` is provided, use this base branch to detect changes.
+    type: string
+  custom-parameters:
+    default: '{}'
+    description: >
+      Custom parameters to pass to the pipeline.
+    type: string
+  dir:
+    default: ''
+    description: >
+      If provided, monitor this directory for changes and trigger only when changed.
+    type: string
+  pattern:
+    default: .*
+    description: >
+      Regex pattern to match for files. Default is to monitor everything in the dir provided.
+    type: string
+  workflow:
+    description: >
+      The workflow name to trigger.
+    type: string
+
+steps:
+  - checkout
+  - when:
+      condition: << parameters.dir >>
+      steps:
+        - trigger-workflow-if-modified:
+            base-branch: << parameters.base-branch >>
+            custom-parameters: << parameters.custom-parameters >>
+            pattern: << parameters.dir >>/<< parameters.pattern >>
+            workflow: << parameters.workflow >>
+  - unless:
+      condition: << parameters.dir >>
+      steps:
+        - trigger-workflow:
+            custom-parameters: << parameters.custom-parameters >>
+            workflow: << parameters.workflow >>

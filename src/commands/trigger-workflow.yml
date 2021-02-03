@@ -1,0 +1,38 @@
+description: >
+  Triggers a workflow.
+
+parameters:
+  custom-parameters:
+    default: '{}'
+    description: >
+      Custom parameters to pass to the pipeline.
+    type: string
+  workflow:
+    default: ''
+    description: >
+      The workflow name to trigger. Will be passed as the `workflow` parameter.
+    type: string
+
+steps:
+  - jq/install
+  - run:
+      name: Trigger workflow
+      command: |-
+        circleci-agent >/dev/null 2>&1 || { echo >&2 "No CircleCI agent. These are in all CircleCI containers."; exit 1; }
+
+        if [ -z "${CIRCLE_TOKEN}" ]; then
+          echo "CIRCLE_TOKEN not set."
+          exit 1
+        fi
+
+        if [ -n "${CIRCLE_PR_NUMBER}" ]; then
+          CIRCLE_BRANCH="pull/${CIRCLE_PR_NUMBER}/head"
+        fi
+
+        PIPELINE_PARAMETERS=$(echo '<< parameters.custom-parameters >>' | jq -c --arg workflow '<< parameters.workflow >>' '. + {workflow: $workflow}')
+
+        curl --silent -X POST \
+          "https://circleci.com/api/v2/project/github/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pipeline?circle-token=${CIRCLE_TOKEN}" \
+          -H 'Accept: */*' \
+          -H 'Content-Type: application/json' \
+          -d '{"branch":"'${CIRCLE_BRANCH}'","parameters":'${PIPELINE_PARAMETERS}'}'
