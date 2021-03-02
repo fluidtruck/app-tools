@@ -22,6 +22,11 @@ parameters:
     description: >
       The environment variable name containing the project ID.
     type: env_var_name
+  dockerfile:
+    default: .
+    description: >
+      The path to the Dockerfile.
+    type: string
 
 steps:
   - gcp-cli/install
@@ -61,7 +66,7 @@ steps:
           --build-arg X_TAG="${IMAGE_TAG}" \
           -t "${IMAGE}:latest" \
           -t "${IMAGE}:${IMAGE_TAG}" \
-          .
+          << parameters.dockerfile >>
 
         docker push "${IMAGE}:latest"
         docker push "${IMAGE}:${IMAGE_TAG}"
