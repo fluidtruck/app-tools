@@ -32,7 +32,7 @@ parameters:
       The container registry to use.
     type: string
   google-container-registry-project-id:
-    default: GOOGLE_PROJECT_ID
+    default: GOOGLE_CONTAINER_REGISTRY_PROJECT_ID
     description: >
       The environment variable name containing the container registry project ID.
     type: env_var_name
