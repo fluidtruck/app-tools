@@ -14,8 +14,13 @@ parameters:
     description: >
       The environment variable name containing the project ID.
     type: env_var_name
-  dockerfile:
+  ctx:
     default: .
+    description: >
+      The context for docker commands.
+    type: string
+  dockerfile:
+    default: Dockerfile
     description: >
       The path to the Dockerfile.
     type: string
@@ -25,4 +30,5 @@ steps:
   - build-and-push:
       gcloud-service-key: << parameters.gcloud-service-key >>
       google-project-id: << parameters.google-project-id >>
+      ctx: << parameters.ctx >>
       dockerfile: << parameters.dockerfile >>

@@ -22,8 +22,13 @@ parameters:
     description: >
       The environment variable name containing the project ID.
     type: env_var_name
-  dockerfile:
+  ctx:
     default: .
+    description: >
+      The context for docker commands.
+    type: string
+  dockerfile:
+    default: Dockerfile
     description: >
       The path to the Dockerfile.
     type: string
@@ -66,7 +71,8 @@ steps:
           --build-arg X_TAG="${IMAGE_TAG}" \
           -t "${IMAGE}:latest" \
           -t "${IMAGE}:${IMAGE_TAG}" \
-          << parameters.dockerfile >>
+          -f << parameters.dockerfile >> \
+          << parameters.ctx >>
 
         docker push "${IMAGE}:latest"
         docker push "${IMAGE}:${IMAGE_TAG}"
