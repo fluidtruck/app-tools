@@ -14,6 +14,11 @@ parameters:
     description: >
       The environment variable name containing the project ID.
     type: env_var_name
+  image-name:
+    default: ""
+    description: >
+      The name of the docker image.
+    type: string
   ctx:
     default: .
     description: >
@@ -30,5 +35,6 @@ steps:
   - build-and-push:
       gcloud-service-key: << parameters.gcloud-service-key >>
       google-project-id: << parameters.google-project-id >>
+      image-name: << parameters.image-name >>
       ctx: << parameters.ctx >>
       dockerfile: << parameters.dockerfile >>
