@@ -109,6 +109,7 @@ steps:
               CHART_NAME="${NAMESPACE}"
               if [ "${USE_GITHUB}" == "true" ]; then
                 NAMESPACE="${CIRCLE_USERNAME}"
+                CHART_NAME="${CHART_NAME}-pr-${CIRCLE_PULL_REQUEST##*/}"
               fi
 
               if [ -n "${VALUES}" ]; then
