@@ -130,7 +130,7 @@ steps:
                 --atomic \
                 --wait \
                 --set image.registry="${CONTAINER_REGISTRY}" \
-                --set image.repository="${CONTAINER_REGISTRY_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}" \
+                --set image.repository="${CONTAINER_REGISTRY_PROJECT_ID}/${NAMESPACE}" \
                 --set image.tag="${CIRCLE_SHA1:0:7}" \
                 "$@"
 
