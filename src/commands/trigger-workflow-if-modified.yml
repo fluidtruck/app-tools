@@ -44,7 +44,7 @@ steps:
           CIRCLE_BRANCH="pull/${CIRCLE_PR_NUMBER}/head"
         fi
 
-        PIPELINE_PARAMETERS=$(echo '<< parameters.custom-parameters >>' | jq -c --arg workflow '<< parameters.workflow >>' '. + {workflow: $workflow}')
+        PIPELINE_PARAMETERS=$(echo '<< parameters.custom-parameters >>' | jq -c --arg workflow '<< parameters.workflow >>' --arg username "${CIRCLE_USERNAME}" '. + {workflow: $workflow, "github-username": $username}')
 
         if [ -z "${BASE_BRANCH}" ]; then
           FILES_MODIFIED=$(git diff --name-only HEAD~1 | grep -i -E '<< parameters.pattern >>' || true)

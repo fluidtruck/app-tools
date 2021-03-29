@@ -29,7 +29,7 @@ steps:
           CIRCLE_BRANCH="pull/${CIRCLE_PR_NUMBER}/head"
         fi
 
-        PIPELINE_PARAMETERS=$(echo '<< parameters.custom-parameters >>' | jq -c --arg workflow '<< parameters.workflow >>' '. + {workflow: $workflow}')
+        PIPELINE_PARAMETERS=$(echo '<< parameters.custom-parameters >>' | jq -c --arg workflow '<< parameters.workflow >>' --arg username "${CIRCLE_USERNAME}" '. + {workflow: $workflow, "github-username": $username}')
 
         curl --silent -X POST \
           "https://circleci.com/api/v2/project/github/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pipeline?circle-token=${CIRCLE_TOKEN}" \

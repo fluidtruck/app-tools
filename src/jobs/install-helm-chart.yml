@@ -10,6 +10,40 @@ parameters:
     description: >
       The version of the chart being installed.
     type: string
+
+  release-name:
+    default: ""
+    description: >
+      Then Helm release name. Defaults to the value of CIRCLE_PROJECT_REPONAME.
+    type: string
+  namespace:
+    default: ""
+    description: >
+      The Kubernetes namespace to use. Defaults to the value of CIRCLE_PROJECT_REPONAME.
+    type: string
+  image-name:
+    default: ""
+    description: >
+      The name of the image to use. Defaults to the value of CIRCLE_PROJECT_REPONAME.
+    type: string
+  repo-url:
+    default: ""
+    description: >
+      The repository URL this chart is located at.
+    type: string
+  values:
+    default: ""
+    description: >
+      A comma delimited list of values files to use. For example:
+
+      ./chart/common.yaml,./charts/stage.yaml
+    type: string
+  use-gcr:
+    default: false
+    description: >
+      Set to true to automa
+    type: boolean
+
   gcloud-service-key:
     default: GCLOUD_SERVICE_KEY
     description: >
@@ -25,45 +59,18 @@ parameters:
     description: >
       The environment variable name containing the project ID.
     type: env_var_name
-  namespace:
-    default: ""
-    description: >
-      The namespace to use. Defaults to the value of CIRCLE_PROJECT_REPONAME.
-    type: string
-  repo-url:
-    default: ""
-    description: >
-      The repository URL this chart is located at.
-    type: string
-  use-gcr:
-    default: false
-    description: >
-      Set to false to install a standard chart.
-    type: boolean
-  use-github:
-    default: false
-    description: >
-      If this is set to true, the command will use CIRCLE_USERNAME as a prefix for the namespace.
-    type: boolean
-  values:
-    default: ""
-    description: >
-      A comma delimited list of values files to use. For example:
-
-      ./chart/staging-values.yml,./charts/values.yml
-    type: string
 
 steps:
   - checkout
-
   - install-helm-chart:
       chart: << parameters.chart >>
       chart-version: << parameters.chart-version >>
+      release-name: << parameters.release-name >>
+      namespace: << parameters.namespace >>
+      image-name: << parameters.image-name >>
+      repo-url: << parameters.repo-url >>
+      values: << parameters.values >>
+      use-gcr: << parameters.use-gcr >>
       gcloud-service-key: << parameters.gcloud-service-key >>
       google-container-registry-project-id: << parameters.google-container-registry-project-id >>
       google-project-id: << parameters.google-project-id >>
-      namespace: << parameters.namespace >>
-      repo-url: << parameters.repo-url >>
-      use-gcr: << parameters.use-gcr >>
-      use-github: << parameters.use-github >>
-      values: << parameters.values >>
