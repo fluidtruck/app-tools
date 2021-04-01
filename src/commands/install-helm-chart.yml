@@ -44,6 +44,11 @@ parameters:
     description: >
       Set to true to automatically create the image.* values.
     type: boolean
+  use-build-num:
+    default: false
+    description: >
+      Set to true to use the build number in the release name.
+    type: boolean
 
   gcloud-service-key:
     default: GCLOUD_SERVICE_KEY
@@ -112,8 +117,8 @@ steps:
           NAMESPACE="${CIRCLE_PROJECT_REPONAME}"
         fi
 
-        if [ ! -z "${CIRCLE_PULL_REQUEST}" ]; then
-          RELEASE_NAME="${RELEASE_NAME}-pr-${CIRCLE_PULL_REQUEST##*/}"
+        if [ ! -z "${CIRCLE_PULL_REQUEST}" ] || [[ "<< parameters.use-build-num >>" == "true" ]]; then
+          RELEASE_NAME="${RELEASE_NAME}-${CIRCLE_BUILD_NUM}"
         fi
 
         if [ -n "${VALUES}" ]; then
