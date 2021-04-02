@@ -88,6 +88,7 @@ steps:
       google-project-id: << parameters.google-project-id >>
       gcloud-service-key: << parameters.gcloud-service-key >>
 
+  - jq/install
   - install-helm-client
 
   - when:
@@ -118,7 +119,8 @@ steps:
         fi
 
         if [ ! -z "${CIRCLE_PULL_REQUEST}" ] || [[ "<< parameters.use-build-num >>" == "true" ]]; then
-          RELEASE_NAME="${RELEASE_NAME}-${CIRCLE_BUILD_NUM}"
+          PIPELINE_NUM=$(curl -s -X GET https://circleci.com/api/v2/workflow/${CIRCLE_BUILD_NUM} -H "Circle-Token: ${CIRCLE_TOKEN}" | jq )
+          RELEASE_NAME="${RELEASE_NAME}-${PIPELINE_NUM}"
         fi
 
         if [ -n "${VALUES}" ]; then
