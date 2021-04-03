@@ -44,10 +44,10 @@ parameters:
     description: >
       Set to true to automatically create the image.* values.
     type: boolean
-  use-build-num:
+  use-branch:
     default: false
     description: >
-      Set to true to use the build number in the release name.
+      Set to true to use the branch name in the release name (will be truncated to 63 characters).
     type: boolean
 
   gcloud-service-key:
@@ -109,6 +109,7 @@ steps:
         NAMESPACE="<< parameters.namespace >>"
         IMAGE_NAME=<< parameters.image-name >>
         VALUES="<< parameters.values >>"
+        USE_BRANCH="<< parameters.use-branch >>"
 
         if [ -z "${RELEASE_NAME}" ]; then
           RELEASE_NAME="${CIRCLE_PROJECT_REPONAME}"
@@ -118,9 +119,8 @@ steps:
           NAMESPACE="${CIRCLE_PROJECT_REPONAME}"
         fi
 
-        if [ ! -z "${CIRCLE_PULL_REQUEST}" ] || [[ "<< parameters.use-build-num >>" == "true" ]]; then
-          PIPELINE_NUM=$(curl -s -X GET https://circleci.com/api/v2/workflow/${CIRCLE_BUILD_NUM} -H "Circle-Token: ${CIRCLE_TOKEN}" | jq )
-          RELEASE_NAME="${RELEASE_NAME}-${PIPELINE_NUM}"
+        if [ ! -z "${CIRCLE_PULL_REQUEST}" ] || [[ "${USE_BRANCH}" == "true" ]]; then
+          RELEASE_NAME=$(echo "${RELEASE_NAME}-${CIRCLE_BRANCH}" | iconv -c -t ascii//TRANSLIT | sed -r 's/[~\^]+//g' | sed -r 's/[^a-zA-Z0-9]+/-/g' | sed -r 's/^-+\|-+$//g' | tr A-Z a-z | cut -c 1-63)
         fi
 
         if [ -n "${VALUES}" ]; then
@@ -140,6 +140,11 @@ steps:
           set -- "$@" --set image.repository="${<< parameters.google-container-registry-project-id >>}/<< parameters.image-name >>"
           set -- "$@" --set image.tag="${CIRCLE_SHA1:0:7}"
         fi
+
+        echo $RELEASE_NAME
+        echo $CHART
+        echo $NAMESPACE
+        echo "$@"
 
         helm upgrade $RELEASE_NAME $CHART \
           --namespace "${NAMESPACE}" \
