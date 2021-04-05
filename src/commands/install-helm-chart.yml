@@ -103,6 +103,8 @@ steps:
   - run:
       name: Install Helm Chart
       command: |-
+        HELM_OUTPUT="helm upgrade"
+
         CHART="<< parameters.chart >>"
         CHART_VERSION="<< parameters.chart-version >>"
         RELEASE_NAME="<< parameters.release-name >>"
@@ -119,32 +121,51 @@ steps:
           NAMESPACE="${CIRCLE_PROJECT_REPONAME}"
         fi
 
+        HELM_OUTPUT="${HELM_OUTPUT} ${RELEASE_NAME} ${CHART} \\\n"
+        HELM_OUTPUT="${HELM_OUTPUT}  --create-namespace \\\n"
+        HELM_OUTPUT="${HELM_OUTPUT}  --install \\\n"
+        HELM_OUTPUT="${HELM_OUTPUT}  --atomic \\\n"
+
         if [ ! -z "${CIRCLE_PULL_REQUEST}" ] || [[ "${USE_BRANCH}" == "true" ]]; then
-          RELEASE_NAME=$(echo "${RELEASE_NAME}-${CIRCLE_BRANCH}" | iconv -c -t ascii//TRANSLIT | sed -r 's/[~\^]+//g' | sed -r 's/[^a-zA-Z0-9]+/-/g' | sed -r 's/^-+\|-+$//g' | tr A-Z a-z | cut -c 1-63)
+          NAMESPACE=$(echo "${CIRCLE_PROJECT_REPONAME}-${CIRCLE_BRANCH}" | iconv -c -t ascii//TRANSLIT | sed -r 's/[~\^]+//g' | sed -r 's/[^a-zA-Z0-9]+/-/g' | sed -r 's/^-+\|-+$//g' | tr A-Z a-z | cut -c 1-63)
+          set -- "$@" --set githubUsername="${CIRCLE_USERNAME}"
+
+          HELM_OUTPUT="${HELM_OUTPUT}  --namespace ${NAMESPACE} \\\n"
+          HELM_OUTPUT="${HELM_OUTPUT}  --set githubUsername=\"${NAMESPACE}\" \\\n"
+        else
+          HELM_OUTPUT="${HELM_OUTPUT}  --namespace ${NAMESPACE} \\\n"
+        fi
+
+        if [ -n "${CHART_VERSION}" ]; then
+          set -- "$@" --version "${CHART_VERSION}"
+          HELM_OUTPUT="${HELM_OUTPUT}  --version ${CHART_VERSION} \\\n"
+        fi
+
+        USE_GCR="<< parameters.use-gcr >>"
+        if [ "${USE_GCR}" == "true" ]; then
+          IMAGE_REGISTRY="<< parameters.google-container-registry >>"
+          IMAGE_REPO="${<< parameters.google-container-registry-project-id >>}/<< parameters.image-name >>"
+          IMAGE_TAG="${CIRCLE_SHA1:0:7}"
+
+          set -- "$@" --set image.registry="${IMAGE_REGISTRY}"
+          set -- "$@" --set image.repository="${IMAGE_REPO}"
+          set -- "$@" --set image.tag="${IMAGE_TAG}"
+
+          HELM_OUTPUT="${HELM_OUTPUT}  --set image.registry=\"${IMAGE_REGISTRY}\" \\\n"
+          HELM_OUTPUT="${HELM_OUTPUT}  --set image.repository=\"${IMAGE_REPO}\" \\\n"
+          HELM_OUTPUT="${HELM_OUTPUT}  --set image.tag=\"${IMAGE_TAG}\" \\\n"
         fi
 
         if [ -n "${VALUES}" ]; then
           SPLIT_VALUES=($(echo ${VALUES} | tr "," "\n"))
           for i in "${SPLIT_VALUES[@]}"; do
             set -- "$@" -f "${i}"
+            HELM_OUTPUT="${HELM_OUTPUT}  -f "${i}" \\\n"
           done
         fi
 
-        if [ -n "${CHART_VERSION}" ]; then
-          set -- "$@" --version "${CHART_VERSION}"
-        fi
-
-        USE_GCR="<< parameters.use-gcr >>"
-        if [ "${USE_GCR}" == "true" ]; then
-          set -- "$@" --set image.registry="<< parameters.google-container-registry >>"
-          set -- "$@" --set image.repository="${<< parameters.google-container-registry-project-id >>}/<< parameters.image-name >>"
-          set -- "$@" --set image.tag="${CIRCLE_SHA1:0:7}"
-        fi
-
-        echo $RELEASE_NAME
-        echo $CHART
-        echo $NAMESPACE
-        echo "$@"
+        echo "Running Helm:"
+        echo $HELM_OUTPUT
 
         helm upgrade $RELEASE_NAME $CHART \
           --namespace "${NAMESPACE}" \
