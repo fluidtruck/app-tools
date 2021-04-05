@@ -121,24 +121,21 @@ steps:
           NAMESPACE="${CIRCLE_PROJECT_REPONAME}"
         fi
 
-        HELM_OUTPUT="${HELM_OUTPUT} ${RELEASE_NAME} ${CHART} \\\n"
-        HELM_OUTPUT="${HELM_OUTPUT}  --create-namespace \\\n"
-        HELM_OUTPUT="${HELM_OUTPUT}  --install \\\n"
-        HELM_OUTPUT="${HELM_OUTPUT}  --atomic \\\n"
+        HELM_OUTPUT="${HELM_OUTPUT} ${RELEASE_NAME} ${CHART} --create-namespace --install --atomic"
 
         if [ ! -z "${CIRCLE_PULL_REQUEST}" ] || [[ "${USE_BRANCH}" == "true" ]]; then
           NAMESPACE=$(echo "${CIRCLE_PROJECT_REPONAME}-${CIRCLE_BRANCH}" | iconv -c -t ascii//TRANSLIT | sed -r 's/[~\^]+//g' | sed -r 's/[^a-zA-Z0-9]+/-/g' | sed -r 's/^-+\|-+$//g' | tr A-Z a-z | cut -c 1-63)
           set -- "$@" --set githubUsername="${CIRCLE_USERNAME}"
 
-          HELM_OUTPUT="${HELM_OUTPUT}  --namespace ${NAMESPACE} \\\n"
-          HELM_OUTPUT="${HELM_OUTPUT}  --set githubUsername=\"${NAMESPACE}\" \\\n"
+          HELM_OUTPUT="${HELM_OUTPUT} --namespace ${NAMESPACE}"
+          HELM_OUTPUT="${HELM_OUTPUT} --set githubUsername=\"${NAMESPACE}\""
         else
-          HELM_OUTPUT="${HELM_OUTPUT}  --namespace ${NAMESPACE} \\\n"
+          HELM_OUTPUT="${HELM_OUTPUT} --namespace ${NAMESPACE}"
         fi
 
         if [ -n "${CHART_VERSION}" ]; then
           set -- "$@" --version "${CHART_VERSION}"
-          HELM_OUTPUT="${HELM_OUTPUT}  --version ${CHART_VERSION} \\\n"
+          HELM_OUTPUT="${HELM_OUTPUT} --version ${CHART_VERSION}"
         fi
 
         USE_GCR="<< parameters.use-gcr >>"
@@ -151,16 +148,16 @@ steps:
           set -- "$@" --set image.repository="${IMAGE_REPO}"
           set -- "$@" --set image.tag="${IMAGE_TAG}"
 
-          HELM_OUTPUT="${HELM_OUTPUT}  --set image.registry=\"${IMAGE_REGISTRY}\" \\\n"
-          HELM_OUTPUT="${HELM_OUTPUT}  --set image.repository=\"${IMAGE_REPO}\" \\\n"
-          HELM_OUTPUT="${HELM_OUTPUT}  --set image.tag=\"${IMAGE_TAG}\" \\\n"
+          HELM_OUTPUT="${HELM_OUTPUT} --set image.registry=\"${IMAGE_REGISTRY}\""
+          HELM_OUTPUT="${HELM_OUTPUT} --set image.repository=\"${IMAGE_REPO}\""
+          HELM_OUTPUT="${HELM_OUTPUT} --set image.tag=\"${IMAGE_TAG}\""
         fi
 
         if [ -n "${VALUES}" ]; then
           SPLIT_VALUES=($(echo ${VALUES} | tr "," "\n"))
           for i in "${SPLIT_VALUES[@]}"; do
             set -- "$@" -f "${i}"
-            HELM_OUTPUT="${HELM_OUTPUT}  -f "${i}" \\\n"
+            HELM_OUTPUT="${HELM_OUTPUT} -f "${i}""
           done
         fi
 
