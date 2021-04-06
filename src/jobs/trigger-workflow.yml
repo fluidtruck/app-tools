@@ -28,6 +28,11 @@ parameters:
     description: >
       The workflow name to trigger.
     type: string
+  github-username:
+    default: false
+    description: >
+      Post the GitHub username with the workflow.
+    type: boolean
 
 steps:
   - checkout
@@ -39,9 +44,11 @@ steps:
             custom-parameters: << parameters.custom-parameters >>
             pattern: << parameters.dir >>/<< parameters.pattern >>
             workflow: << parameters.workflow >>
+            github-username: << parameters.github-username >>
   - unless:
       condition: << parameters.dir >>
       steps:
         - trigger-workflow:
             custom-parameters: << parameters.custom-parameters >>
             workflow: << parameters.workflow >>
+            github-username: << parameters.github-username >>

@@ -24,6 +24,11 @@ parameters:
     description: >
       The workflow name to trigger. Will be passed as the `workflow` parameter.
     type: string
+  github-username:
+    default: false
+    description: >
+      Post the GitHub username with the workflow.
+    type: boolean
 
 steps:
   - jq/install
@@ -31,6 +36,7 @@ steps:
       name: Trigger workflow if modified
       command: |-
         BASE_BRANCH="<< parameters.base-branch >>"
+        WITH_USERNAME="<< parameters.github-username >>"
 
         git status >/dev/null 2>&1 || { echo >&2 "Not in a git directory, or no git."; exit 1; }
         circleci-agent >/dev/null 2>&1 || { echo >&2 "No CircleCI agent. These are in all CircleCI containers."; exit 1; }
@@ -44,7 +50,11 @@ steps:
           CIRCLE_BRANCH="pull/${CIRCLE_PR_NUMBER}/head"
         fi
 
-        PIPELINE_PARAMETERS=$(echo '<< parameters.custom-parameters >>' | jq -c --arg workflow '<< parameters.workflow >>' --arg username "${CIRCLE_USERNAME}" '. + {workflow: $workflow, "github-username": $username}')
+        PIPELINE_PARAMETERS=$(echo '<< parameters.custom-parameters >>' | jq -c --arg workflow '<< parameters.workflow >>' '. + {workflow: $workflow}')
+
+        if [[ "${WITH_USERNAME}" == "true" ]]; then
+          PIPELINE_PARAMETERS=$(echo "${PIPELINE_PARAMETERS}" | jq -c --arg username "${CIRCLE_USERNAME}" '. + {"github-username": $username})
+        fi
 
         if [ -z "${BASE_BRANCH}" ]; then
           FILES_MODIFIED=$(git diff --name-only HEAD~1 | grep -i -E '<< parameters.pattern >>' || true)

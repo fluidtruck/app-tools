@@ -12,12 +12,19 @@ parameters:
     description: >
       The workflow name to trigger. Will be passed as the `workflow` parameter.
     type: string
+  github-username:
+    default: false
+    description: >
+      Post the GitHub username with the workflow.
+    type: boolean
 
 steps:
   - jq/install
   - run:
       name: Trigger workflow
       command: |-
+        WITH_USERNAME="<< parameters.github-username >>"
+
         circleci-agent >/dev/null 2>&1 || { echo >&2 "No CircleCI agent. These are in all CircleCI containers."; exit 1; }
 
         if [ -z "${CIRCLE_TOKEN}" ]; then
@@ -29,7 +36,11 @@ steps:
           CIRCLE_BRANCH="pull/${CIRCLE_PR_NUMBER}/head"
         fi
 
-        PIPELINE_PARAMETERS=$(echo '<< parameters.custom-parameters >>' | jq -c --arg workflow '<< parameters.workflow >>' --arg username "${CIRCLE_USERNAME}" '. + {workflow: $workflow, "github-username": $username}')
+        PIPELINE_PARAMETERS=$(echo '<< parameters.custom-parameters >>' | jq -c --arg workflow '<< parameters.workflow >>' '. + {workflow: $workflow}')
+
+        if [[ "${WITH_USERNAME}" == "true" ]]; then
+          PIPELINE_PARAMETERS=$(echo "${PIPELINE_PARAMETERS}" | jq -c --arg username "${CIRCLE_USERNAME}" '. + {"github-username": $username})
+        fi
 
         curl --silent -X POST \
           "https://circleci.com/api/v2/project/github/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pipeline?circle-token=${CIRCLE_TOKEN}" \
