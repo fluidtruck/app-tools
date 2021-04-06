@@ -39,7 +39,7 @@ steps:
         PIPELINE_PARAMETERS=$(echo '<< parameters.custom-parameters >>' | jq -c --arg workflow '<< parameters.workflow >>' '. + {workflow: $workflow}')
 
         if [[ "${WITH_USERNAME}" == "true" ]]; then
-          PIPELINE_PARAMETERS=$(echo "${PIPELINE_PARAMETERS}" | jq -c --arg username "${CIRCLE_USERNAME}" '. + {"github-username": $username})
+          PIPELINE_PARAMETERS=$(echo "${PIPELINE_PARAMETERS}" | jq -c --arg username "${CIRCLE_USERNAME}" '. + {"github-username": $username}')
         fi
 
         curl --silent -X POST \
