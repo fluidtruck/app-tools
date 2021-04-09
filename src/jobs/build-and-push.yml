@@ -40,6 +40,7 @@ steps:
   - build-and-push:
       gcloud-service-key: << parameters.gcloud-service-key >>
       google-project-id: << parameters.google-project-id >>
+      github-token: << parameters.github-token >>
       image-name: << parameters.image-name >>
       ctx: << parameters.ctx >>
       dockerfile: << parameters.dockerfile >>
