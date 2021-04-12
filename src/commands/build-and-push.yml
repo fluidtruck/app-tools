@@ -22,6 +22,11 @@ parameters:
     description: >
       The environment variable name containing the project ID.
     type: env_var_name
+  github-token:
+    default: ""
+    description: >
+      A GitHub token used to access private Fluidshare repos.
+    type: string
   image-name:
     default: ""
     description: >
@@ -78,6 +83,7 @@ steps:
         IMAGE_TAG="${CIRCLE_SHA1:0:7}"
 
         docker build \
+          --build-arg GITHUB_TOKEN="<< parameters.github-token >>" \
           --build-arg X_TAG="${IMAGE_TAG}" \
           -t "${IMAGE}:latest" \
           -t "${IMAGE}:${IMAGE_TAG}" \
