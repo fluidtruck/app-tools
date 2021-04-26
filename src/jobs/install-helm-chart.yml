@@ -48,6 +48,11 @@ parameters:
     description: >
       Set to true to use the branch name in the release name (will be truncated to 63 characters).
     type: boolean
+  pr-comment:
+    default: false
+    description: >
+      Set to true to leave a comment on the PR with the URL to the environment.
+    type: boolean
 
   gcloud-service-key:
     default: GCLOUD_SERVICE_KEY

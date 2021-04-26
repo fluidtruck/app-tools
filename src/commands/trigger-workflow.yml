@@ -17,12 +17,18 @@ parameters:
     description: >
       Post the GitHub username with the workflow.
     type: boolean
+  use-head:
+    default: false
+    description: >
+      Use the HEAD commit, defaults to the current COMMIT_SHA1 value.
+    type: boolean
 
 steps:
   - jq/install
   - run:
       name: Trigger workflow
       command: |-
+        USE_HEAD="<< parameters.use-head >>"
         WITH_USERNAME="<< parameters.github-username >>"
 
         circleci-agent >/dev/null 2>&1 || { echo >&2 "No CircleCI agent. These are in all CircleCI containers."; exit 1; }
@@ -40,6 +46,10 @@ steps:
 
         if [[ "${WITH_USERNAME}" == "true" ]]; then
           PIPELINE_PARAMETERS=$(echo "${PIPELINE_PARAMETERS}" | jq -c --arg username "${CIRCLE_USERNAME}" '. + {"github-username": $username}')
+        fi
+
+        if [[ "${USE_HEAD}" == "false" ]]; then
+          PIPELINE_PARAMETERS=$(echo "${PIPELINE_PARAMETERS}" | jq -c --arg commit "${COMMIT_SHA1}" '. + {"commit": $commit}')
         fi
 
         curl --silent -X POST \

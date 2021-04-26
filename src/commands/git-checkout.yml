@@ -1,0 +1,21 @@
+description: >
+  A simple wrapper to handle the checkout process of a repo.
+
+parameters:
+  commit:
+    default: ""
+    description: >
+      The commit SHA to checkout.
+    type: string
+
+steps:
+  - checkout
+  - run:
+      name: Checkout specific commit
+      command: |-
+        COMMIT_SHA="<< parameters.commit >>"
+
+        if [ -n "${COMMIT_SHA}" ]; then
+          git checkout --force -B "$CIRCLE_BRANCH" "$COMMIT_SHA"
+          git --no-pager log --no-color -n 1 --format='HEAD is now at %h %s'
+        fi

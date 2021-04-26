@@ -33,6 +33,11 @@ parameters:
     description: >
       Post the GitHub username with the workflow.
     type: boolean
+  use-head:
+    default: false
+    description: >
+      Use the HEAD commit, defaults to the current COMMIT_SHA1 value.
+    type: boolean
 
 steps:
   - checkout
@@ -52,3 +57,4 @@ steps:
             custom-parameters: << parameters.custom-parameters >>
             workflow: << parameters.workflow >>
             github-username: << parameters.github-username >>
+            use-head: << parameters.use-head >>
