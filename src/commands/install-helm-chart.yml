@@ -44,11 +44,16 @@ parameters:
     description: >
       Set to true to automatically create the image.* values.
     type: boolean
-  use-branch:
+  pr:
     default: false
     description: >
-      Set to true to use the branch name in the release name (will be truncated to 63 characters).
+      Set to true to enable PR release name and namespace configuration.
     type: boolean
+  pr-prefix:
+    default: ""
+    description: >
+      The prefix to use for PR related naming.
+    type: string
 
   gcloud-service-key:
     default: GCLOUD_SERVICE_KEY
@@ -111,27 +116,28 @@ steps:
         NAMESPACE="<< parameters.namespace >>"
         IMAGE_NAME=<< parameters.image-name >>
         VALUES="<< parameters.values >>"
-        USE_BRANCH="<< parameters.use-branch >>"
-
-        if [ -z "${RELEASE_NAME}" ]; then
-          RELEASE_NAME="${CIRCLE_PROJECT_REPONAME}"
-        fi
+        IS_PR="<< parameters.pr >>"
+        PR_PREFIX="<< parameters.pr-prefix >>"
 
         if [ -z "${NAMESPACE}" ]; then
           NAMESPACE="${CIRCLE_PROJECT_REPONAME}"
         fi
 
-        HELM_OUTPUT="${HELM_OUTPUT} ${RELEASE_NAME} ${CHART} --create-namespace --install --atomic"
+        if [[ "${IS_PR}" == "true" ]]; then
+          # If in a PR, and release-name is not set, concat the repo name and branch to create a
+          # unique release name for the namespace.
+          if [ -z "${RELEASE_NAME}" ]; then
+            RELEASE_NAME=$(echo "${CIRCLE_BRANCH}" | iconv -c -t ascii//TRANSLIT | sed -r 's/[~\^]+//g' | sed -r 's/[^a-zA-Z0-9]+/-/g' | sed -r 's/^-+\|-+$//g' | tr A-Z a-z | cut -c 1-63)
 
-        if [ ! -z "${CIRCLE_PULL_REQUEST}" ] || [[ "${USE_BRANCH}" == "true" ]]; then
-          NAMESPACE=$(echo "${CIRCLE_PROJECT_REPONAME}-${CIRCLE_BRANCH}" | iconv -c -t ascii//TRANSLIT | sed -r 's/[~\^]+//g' | sed -r 's/[^a-zA-Z0-9]+/-/g' | sed -r 's/^-+\|-+$//g' | tr A-Z a-z | cut -c 1-63)
-          set -- "$@" --set githubUsername="${CIRCLE_USERNAME}"
-
-          HELM_OUTPUT="${HELM_OUTPUT} --namespace ${NAMESPACE}"
-          HELM_OUTPUT="${HELM_OUTPUT} --set githubUsername=\"${NAMESPACE}\""
-        else
-          HELM_OUTPUT="${HELM_OUTPUT} --namespace ${NAMESPACE}"
+            if [ -n "${PR_PREFIX}" ]; then
+              RELEASE_NAME=$(echo "${PR_PREFIX}-${RELEASE_NAME}" | cut -c 1-63)
+            fi
+          fi
+        elif [ -z "${RELEASE_NAME}" ]; then
+          RELEASE_NAME="${CIRCLE_PROJECT_REPONAME}"
         fi
+
+        HELM_OUTPUT="${HELM_OUTPUT} ${RELEASE_NAME} ${CHART} --namespace ${NAMESPACE} --create-namespace --install --atomic"
 
         if [ -n "${CHART_VERSION}" ]; then
           set -- "$@" --version "${CHART_VERSION}"
@@ -140,8 +146,13 @@ steps:
 
         USE_GCR="<< parameters.use-gcr >>"
         if [ "${USE_GCR}" == "true" ]; then
+          IMAGE_NAME="<< parameters.image-name >>"
+          if [ -z "${IMAGE_NAME}" ]; then
+            IMAGE_NAME="${CIRCLE_PROJECT_REPONAME}"
+          fi
+
           IMAGE_REGISTRY="<< parameters.google-container-registry >>"
-          IMAGE_REPO="${<< parameters.google-container-registry-project-id >>}/<< parameters.image-name >>"
+          IMAGE_REPO="${<< parameters.google-container-registry-project-id >>}/${IMAGE_NAME}"
           IMAGE_TAG="${CIRCLE_SHA1:0:7}"
 
           set -- "$@" --set image.registry="${IMAGE_REGISTRY}"

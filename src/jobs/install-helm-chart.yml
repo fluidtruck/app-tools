@@ -43,11 +43,16 @@ parameters:
     description: >
       Set to true to automa
     type: boolean
-  use-branch:
+  pr:
     default: false
     description: >
-      Set to true to use the branch name in the release name (will be truncated to 63 characters).
+      Set to true to enable PR release name and namespace configuration.
     type: boolean
+  pr-prefix:
+    default: ""
+    description: >
+      The prefix to use for PR related naming.
+    type: string
 
   gcloud-service-key:
     default: GCLOUD_SERVICE_KEY
@@ -76,7 +81,8 @@ steps:
       repo-url: << parameters.repo-url >>
       values: << parameters.values >>
       use-gcr: << parameters.use-gcr >>
-      use-branch: << parameters.use-branch >>
+      pr: << parameters.pr >>
+      pr-prefix: << parameters.pr-prefix >>
       gcloud-service-key: << parameters.gcloud-service-key >>
       google-container-registry-project-id: << parameters.google-container-registry-project-id >>
       google-project-id: << parameters.google-project-id >>
