@@ -28,5 +28,5 @@ steps:
         ./get_helm.sh "$@"
 
   - add-helm-repo:
-      repo: fluidshare
-      url: https://fluidshare.github.io/helm-charts
+      repo: fluidtruck
+      url: https://fluidtruck.github.io/helm-charts

@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  gcp-helm: fluidshare/app-tools@<<pipeline.parameters.dev-orb-version>>
+  gcp-helm: fluidtruck/app-tools@<<pipeline.parameters.dev-orb-version>>
   orb-tools: circleci/orb-tools@10.0
 
 parameters:
@@ -50,7 +50,7 @@ workflows:
     jobs:
       - integration-test-1
       - orb-tools/dev-promote-prod-from-commit-subject:
-          orb-name: fluidshare/app-tools
+          orb-name: fluidtruck/app-tools
           context: orb-publishing
           add-pr-comment: false
           fail-if-semver-not-indicated: true

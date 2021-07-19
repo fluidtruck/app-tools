@@ -1,14 +1,14 @@
 # Orb Project Template
 
-[![CircleCI Build Status](https://circleci.com/gh/fluidshare/app-tools.svg?style=shield "CircleCI Build Status")](https://circleci.com/gh/fluidshare/app-tools) [![CircleCI Orb Version](https://img.shields.io/badge/endpoint.svg?url=https://badges.circleci.io/orb/fluidshare/app-tools)](https://circleci.com/orbs/registry/orb/fluidshare/app-tools) [![GitHub License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://raw.githubusercontent.com/fluidshare/app-tools/main/LICENSE) [![CircleCI Community](https://img.shields.io/badge/community-CircleCI%20Discuss-343434.svg)](https://discuss.circleci.com/c/ecosystem/orbs)
+[![CircleCI Build Status](https://circleci.com/gh/fluidtruck/app-tools.svg?style=shield "CircleCI Build Status")](https://circleci.com/gh/fluidtruck/app-tools) [![CircleCI Orb Version](https://img.shields.io/badge/endpoint.svg?url=https://badges.circleci.io/orb/fluidtruck/app-tools)](https://circleci.com/orbs/registry/orb/fluidtruck/app-tools) [![GitHub License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://raw.githubusercontent.com/fluidtruck/app-tools/main/LICENSE) [![CircleCI Community](https://img.shields.io/badge/community-CircleCI%20Discuss-343434.svg)](https://discuss.circleci.com/c/ecosystem/orbs)
 
 ## Resources
 
-[CircleCI Orb Registry Page](https://circleci.com/orbs/registry/orb/fluidshare/app-tools) - The official registry page of this orb for all versions, executors, commands, and jobs described.
+[CircleCI Orb Registry Page](https://circleci.com/orbs/registry/orb/fluidtruck/app-tools) - The official registry page of this orb for all versions, executors, commands, and jobs described.
 
 ## Contributing
 
-We welcome [issues](https://github.com/fluidshare/app-tools/issues) to and [pull requests](https://github.com/fluidshare/app-tools/pulls) against this repository!
+We welcome [issues](https://github.com/fluidtruck/app-tools/issues) to and [pull requests](https://github.com/fluidtruck/app-tools/pulls) against this repository!
 
 ## Publishing
 

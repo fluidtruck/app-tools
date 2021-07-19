@@ -25,7 +25,7 @@ parameters:
   github-token:
     default: ""
     description: >
-      A GitHub token used to access private Fluidshare repos.
+      A GitHub token used to access private fluidtruck repos.
     type: string
   image-name:
     default: ""
