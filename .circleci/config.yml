@@ -36,7 +36,7 @@ workflows:
             - orb-tools/lint
             - orb-tools/pack
       - orb-tools/publish-dev:
-          orb-name: fluidshare/app-tools
+          orb-name: fluidtruck/app-tools
           context: orb-publishing
           requires: [hold-for-dev-publish]
       - orb-tools/trigger-integration-tests-workflow:
