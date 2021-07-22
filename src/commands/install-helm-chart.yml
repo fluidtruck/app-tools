@@ -124,6 +124,9 @@ steps:
         fi
 
         if [[ "${IS_PR}" == "true" ]]; then
+          NODE_POOL_NAME="pull-request-node-pool"
+          INGRESS_CLASS="pull-request"
+
           # If in a PR, and release-name is not set, concat the repo name and branch to create a
           # unique release name for the namespace.
           if [ -z "${RELEASE_NAME}" ]; then
@@ -134,14 +137,13 @@ steps:
             fi
           fi
         elif [ -z "${RELEASE_NAME}" ]; then
+          NODE_POOL_NAME="default-node-pool"
+          INGRESS_CLASS="nginx"
           RELEASE_NAME="${CIRCLE_PROJECT_REPONAME}"
         fi
 
-        HELM_OUTPUT="${HELM_OUTPUT} ${RELEASE_NAME} ${CHART} --namespace ${NAMESPACE} --create-namespace --install --atomic"
-
         if [ -n "${CHART_VERSION}" ]; then
           set -- "$@" --version "${CHART_VERSION}"
-          HELM_OUTPUT="${HELM_OUTPUT} --version ${CHART_VERSION}"
         fi
 
         USE_GCR="<< parameters.use-gcr >>"
@@ -158,22 +160,35 @@ steps:
           set -- "$@" --set image.registry="${IMAGE_REGISTRY}"
           set -- "$@" --set image.repository="${IMAGE_REPO}"
           set -- "$@" --set image.tag="${IMAGE_TAG}"
-
-          HELM_OUTPUT="${HELM_OUTPUT} --set image.registry=\"${IMAGE_REGISTRY}\""
-          HELM_OUTPUT="${HELM_OUTPUT} --set image.repository=\"${IMAGE_REPO}\""
-          HELM_OUTPUT="${HELM_OUTPUT} --set image.tag=\"${IMAGE_TAG}\""
         fi
 
         if [ -n "${VALUES}" ]; then
           SPLIT_VALUES=($(echo ${VALUES} | tr "," "\n"))
           for i in "${SPLIT_VALUES[@]}"; do
             set -- "$@" -f "${i}"
-            HELM_OUTPUT="${HELM_OUTPUT} -f "${i}""
           done
         fi
 
-        echo "Running Helm:"
-        echo $HELM_OUTPUT
+        set -- "$@" --set 'affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key'="cloud.google.com/gke-nodepool"
+        set -- "$@" --set 'affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].operator'=In
+        set -- "$@" --set 'affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].values[0]'=${NODE_POOL_NAME}
+        set -- "$@" --set ingress.clusterIssuer="letsencrypt-production"
+        set -- "$@" --set ingress.hostname="${INGRESS_HOSTNAME}"
+        set -- "$@" --set ingress.annotations.'kubernetes\.io\/ingress\.class'="${INGRESS_CLASS}"
+
+        if [[ "${VALUES}" == *"prod.yaml"* ]]; then
+          set -- "$@" --set ingress.tls="true"
+          set -- "$@" --set ingress.hostname="${NAMESPACE}.fluidtruck.io"
+        else
+          set -- "$@" --set 'ingress.extraTls[0].hosts[0]'="*.${NAMESPACE}.fluidtruck.io"
+          set -- "$@" --set 'ingress.extraTls[0].secretName'="${NAMESPACE}-tls"
+
+          if [[ "${IS_PR}" == "true" ]]; then
+            set -- "$@" --set ingress.hostname="${RELEASE_NAME}.${NAMESPACE}.fluidtruck.io"
+          else
+            set -- "$@" --set ingress.hostname="stage.${NAMESPACE}.fluidtruck.io"
+          fi
+        fi
 
         helm upgrade $RELEASE_NAME $CHART \
           --namespace "${NAMESPACE}" \
@@ -181,3 +196,6 @@ steps:
           --install \
           --atomic \
           "$@"
+
+        helm get values $RELEASE_NAME \
+          --namespace $NAMESPACE
