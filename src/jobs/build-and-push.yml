@@ -1,7 +1,7 @@
 description: >
   Handles the build and push of the docker image.
 
-executor: machine
+executor: cimg
 
 parameters:
   gcloud-service-key:
@@ -42,6 +42,9 @@ parameters:
 
 steps:
   - checkout
+  - setup_remote_docker:
+      version: 20.10.6
+      docker_layer_caching: true
   - build-and-push:
       gcloud-service-key: << parameters.gcloud-service-key >>
       google-project-id: << parameters.google-project-id >>
