@@ -34,6 +34,11 @@ parameters:
     description: >
       The path to the Dockerfile.
     type: string
+  command:
+    default: ""
+    description: >
+      The command to run instead of our built in logic.
+    type: string
 
 steps:
   - checkout
@@ -44,3 +49,4 @@ steps:
       image-name: << parameters.image-name >>
       ctx: << parameters.ctx >>
       dockerfile: << parameters.dockerfile >>
+      command: << parameters.command >>

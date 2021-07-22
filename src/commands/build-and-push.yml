@@ -42,6 +42,11 @@ parameters:
     description: >
       The path to the Dockerfile.
     type: string
+  command:
+    default: ""
+    description: >
+      The command to run instead of our built in logic.
+    type: string
 
 steps:
   - gcp-cli/install
@@ -68,27 +73,37 @@ steps:
           $SUDO chown "${USER}:${USER}" "${HOME}/.config" -R
         fi
 
-  - run:
-      name: Build and Push Docker Image
-      command: |-
-        CONTAINER_REGISTRY="<< parameters.google-container-registry >>"
-        PROJECT_ID=$<< parameters.google-project-id >>
+  - when:
+      condition: << parameters.command >>
+      steps:
+        - run:
+            name: Build and Push Docker Image
+            command: << parameters.command >>
 
-        IMAGE_NAME="<< parameters.image-name >>"
-        if [ -z "${IMAGE_NAME}" ]; then
-          IMAGE_NAME="${CIRCLE_PROJECT_REPONAME}"
-        fi
+  - unless:
+      condition: << parameters.command >>
+      steps:
+        - run:
+            name: Build and Push Docker Image
+            command: |-
+              CONTAINER_REGISTRY="<< parameters.google-container-registry >>"
+              PROJECT_ID=$<< parameters.google-project-id >>
 
-        IMAGE="${CONTAINER_REGISTRY}/${PROJECT_ID}/${IMAGE_NAME}"
-        IMAGE_TAG="${CIRCLE_SHA1:0:7}"
+              IMAGE_NAME="<< parameters.image-name >>"
+              if [ -z "${IMAGE_NAME}" ]; then
+                IMAGE_NAME="${CIRCLE_PROJECT_REPONAME}"
+              fi
 
-        docker build \
-          --build-arg GITHUB_TOKEN="<< parameters.github-token >>" \
-          --build-arg X_TAG="${IMAGE_TAG}" \
-          -t "${IMAGE}:latest" \
-          -t "${IMAGE}:${IMAGE_TAG}" \
-          -f << parameters.dockerfile >> \
-          << parameters.ctx >>
+              IMAGE="${CONTAINER_REGISTRY}/${PROJECT_ID}/${IMAGE_NAME}"
+              IMAGE_TAG="${CIRCLE_SHA1:0:7}"
 
-        docker push "${IMAGE}:latest"
-        docker push "${IMAGE}:${IMAGE_TAG}"
+              docker build \
+                --build-arg GITHUB_TOKEN="<< parameters.github-token >>" \
+                --build-arg X_TAG="${IMAGE_TAG}" \
+                -t "${IMAGE}:latest" \
+                -t "${IMAGE}:${IMAGE_TAG}" \
+                -f << parameters.dockerfile >> \
+                << parameters.ctx >>
+
+              docker push "${IMAGE}:latest"
+              docker push "${IMAGE}:${IMAGE_TAG}"
